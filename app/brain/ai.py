@@ -1,8 +1,14 @@
 from app.brain.memory import get_memory
-import os
 from openai import OpenAI
+from app.config import OPENAI_API_KEY   # ✅ IMPORT FROM CONFIG
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# 🔥 ADD DEBUG HERE
+print("API KEY:", OPENAI_API_KEY)
+
+
+# ✅ Use centralized key
+client = OpenAI(api_key=OPENAI_API_KEY)
+
 
 # =========================
 # 🧠 MAIN CHAT FUNCTION
