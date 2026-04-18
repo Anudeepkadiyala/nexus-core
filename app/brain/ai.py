@@ -2,8 +2,7 @@ from app.brain.memory import get_memory
 from openai import OpenAI
 from app.config import OPENAI_API_KEY   # ✅ IMPORT FROM CONFIG
 
-# 🔥 ADD DEBUG HERE
-print("API KEY:", OPENAI_API_KEY)
+
 
 
 # ✅ Use centralized key
