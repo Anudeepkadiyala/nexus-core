@@ -83,13 +83,13 @@ export default function RightPanel() {
           {loading ? "Updating..." : `Live Feed Active • ${region.toUpperCase()}`}
         </p>
 
-        {/* 🧠 ANALYSIS (FIXED HEIGHT) */}
+        {/* ANALYSIS */}
         <div
           className="panel glass"
           style={{
             padding: "10px",
             marginBottom: "10px",
-            maxHeight: "100px",     // 🔥 FIX
+            maxHeight: "100px",
             overflowY: "auto"
           }}
         >
@@ -98,7 +98,7 @@ export default function RightPanel() {
           </p>
         </div>
 
-        {/* 🔥 NEWS GRID (CONTROLLED) */}
+        {/* NEWS GRID */}
         <div
           style={{
             display: "grid",
@@ -116,7 +116,7 @@ export default function RightPanel() {
               className="panel glass"
               style={{
                 padding: "10px",
-                height: "130px",   // 🔥 FIXED
+                height: "130px",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
@@ -129,9 +129,6 @@ export default function RightPanel() {
                   fontWeight: "bold",
                   fontSize: "13px",
                   overflow: "hidden",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
                 }}
               >
                 {item.title}
@@ -143,9 +140,6 @@ export default function RightPanel() {
                   fontSize: "11px",
                   opacity: 0.7,
                   overflow: "hidden",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: "vertical",
                 }}
               >
                 {item.description}
@@ -168,70 +162,62 @@ export default function RightPanel() {
 
       {/* ================= FULLSCREEN ================= */}
       {fullscreen && (
-  <div
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      background: "rgba(0, 8, 20, 0.98)",
-      zIndex: 9999,
-      padding: "20px",
-    }}
-  >
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0, 8, 20, 0.98)",
+            zIndex: 9999,
+            padding: "20px",
+          }}
+        >
+          <button
+            onClick={() => setFullscreen(false)}
+            style={{
+              position: "absolute",
+              top: "20px",
+              right: "20px",
+              border: "1px solid #00f0ff",
+              color: "#00f0ff",
+              background: "transparent",
+              padding: "6px 12px",
+              cursor: "pointer",
+              zIndex: 10000,
+            }}
+          >
+            CLOSE
+          </button>
 
-    {/* CLOSE BUTTON (ALWAYS WORKS) */}
-    <button
-      onClick={() => setFullscreen(false)}
-      style={{
-        position: "absolute",
-        top: "20px",
-        right: "20px",
-        border: "1px solid #00f0ff",
-        color: "#00f0ff",
-        background: "transparent",
-        padding: "6px 12px",
-        cursor: "pointer",
-        zIndex: 10000,
-      }}
-    >
-      CLOSE
-    </button>
+          <div style={{ width: "100%", height: "100%" }}>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <GlobeComponent onRegionSelect={setRegion} />
+            </div>
 
-    {/* CONTENT */}
-    <div style={{ width: "100%", height: "100%" }}>
-      
-      {/* GLOBE */}
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <GlobeComponent onRegionSelect={setRegion} />
-      </div>
+            <div style={{ marginTop: "20px" }}>
+              <p>🧠 {analysis}</p>
+            </div>
 
-      {/* ANALYSIS */}
-      <div style={{ marginTop: "20px" }}>
-        <p>🧠 {analysis}</p>
-      </div>
-
-      {/* NEWS */}
-      <div
-        style={{
-          marginTop: "30px",
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "20px",
-        }}
-      >
-        {(news || []).map((item, index) => (
-          <div key={index} className="panel glass">
-            <h4>{item.title}</h4>
-            <p>{item.description}</p>
+            <div
+              style={{
+                marginTop: "30px",
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "20px",
+              }}
+            >
+              {(news || []).map((item, index) => (
+                <div key={index} className="panel glass">
+                  <h4>{item.title}</h4>
+                  <p>{item.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
-
-    </div>
-  </div>
-)}
+        </div>
+      )}
     </>
   );
 }

@@ -1,17 +1,20 @@
 import webbrowser
 
 
-def open_website(site: str):
-    try:
-        if not site.startswith("http"):
-            site = "https://" + site
+def open_website(site):
+    import webbrowser
 
-        webbrowser.open(site)
+    if not site.startswith("http"):
+        site = "https://" + site
 
-        return {
-            "status": "success",
-            "message": f"Opening {site}"
-        }
+    # 🔥 still open on Ubuntu (optional for now)
+    webbrowser.open(site)
+
+    return {
+        "status": "success",
+        "message": f"Opening {site}",
+        "url": site   # 🔥 CRITICAL
+    }
 
     except Exception as e:
         return {

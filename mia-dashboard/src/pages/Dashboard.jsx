@@ -2,8 +2,16 @@ import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import CorePanel from "../components/CorePanel";
 import RightPanel from "../components/RightPanel";
+import ActionOverlay from "../components/ActionOverlay";
 
 export default function Dashboard(props) {
+
+const handleCloseOverlay = () => {
+  if (props.action) {
+    props.setAction?.(null);
+  }
+};
+
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
       
@@ -34,10 +42,11 @@ export default function Dashboard(props) {
 
         {/* RIGHT PANEL */}
         <div style={{ width: "400px", display: "flex" }}>
-          <RightPanel />
+          <RightPanel action={props.action} /> {/* 🔥 NEW */}
         </div>
 
       </div>
+      <ActionOverlay action={props.action} onClose={handleCloseOverlay} />
     </div>
   );
 }

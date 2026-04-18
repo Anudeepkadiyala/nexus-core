@@ -8,6 +8,8 @@ function App() {
   const [chat, setChat] = useState([]);
   const [mode, setMode] = useState("oracle");
 
+  const [action, setAction] = useState(null); // 🔥 NEW
+
   const chatEndRef = useRef(null);
 
   // Auto scroll
@@ -22,7 +24,6 @@ function App() {
     setChat(newChat);
 
     try {
-      
       setChat([
         ...newChat,
         { role: "mia", text: "Processing..." }
@@ -33,10 +34,25 @@ function App() {
         mode: mode,
       });
 
-      setChat([
-        ...newChat,
-        { role: "mia", text: res.data.response },
-      ]);
+      const data = res.data;
+
+      // 🔥 HANDLE BOTH TYPES
+      if (data.type === "action") {
+        setChat([
+          ...newChat,
+          { role: "mia", text: data.message }
+        ]);
+
+        setAction(data.action); // store action
+      } else {
+        setChat([
+          ...newChat,
+          { role: "mia", text: data.message }
+        ]);
+
+        setAction(null); // reset
+      }
+
     } catch (err) {
       setChat([
         ...newChat,
@@ -63,6 +79,8 @@ function App() {
       mode={mode}
       setMode={setMode}
       chatEndRef={chatEndRef}
+      action={action} // 🔥 NEW
+      setAction={setAction}
     />
   );
 }
