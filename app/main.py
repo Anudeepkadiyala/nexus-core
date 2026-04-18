@@ -56,23 +56,27 @@ async def chat(request: ChatRequest):
     raw_input = request.message
     user_input = parse_intent(raw_input)
 
+    # =========================
     # ⚙️ STEP 1: Try execution
+    # =========================
     action_result = route_action(user_input)
 
     if action_result["status"] != "no_action":
         return {
             "type": "action",
-            "result": action_result
+            "message": action_result.get("message", "Action executed"),
+            "action": action_result  # 🔥 pass full object for now
         }
 
+    # =========================
     # 🧠 STEP 2: AI response
+    # =========================
     ai_response = ask_mia(user_input)
 
     return {
         "type": "ai",
-        "response": ai_response
+        "message": ai_response
     }
-
 
 # =========================
 # 🌍 NEWS (RSS SYSTEM)
