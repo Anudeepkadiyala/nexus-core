@@ -61,11 +61,18 @@ async def chat(request: ChatRequest):
     # =========================
     action_result = route_action(user_input)
 
-    if action_result["status"] != "no_action":
+    # ✅ FIX 1: SAFETY CHECK
+    if not action_result or not isinstance(action_result, dict):
+        action_result = {
+            "status": "no_action"
+        }
+
+    # ✅ FIX 2: SAFE ACCESS
+    if action_result.get("status") != "no_action":
         return {
             "type": "action",
             "message": action_result.get("message", "Action executed"),
-            "action": action_result  # 🔥 pass full object for now
+            "action": action_result
         }
 
     # =========================
@@ -73,11 +80,14 @@ async def chat(request: ChatRequest):
     # =========================
     ai_response = ask_mia(user_input)
 
+    # ✅ FIX 3: AI FALLBACK
+    if not ai_response:
+        ai_response = "I'm here, Sir. How can I assist you?"
+
     return {
         "type": "ai",
         "message": ai_response
     }
-
 # =========================
 # 🌍 NEWS (RSS SYSTEM)
 # =========================

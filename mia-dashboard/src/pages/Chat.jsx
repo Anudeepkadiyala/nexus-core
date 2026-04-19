@@ -53,7 +53,10 @@ export default function Chat({ mode, setMode }) {
       time: new Date().toTimeString().slice(0, 8),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => [
+  ...(Array.isArray(prev) ? prev : []),
+  userMsg,
+]);
     setInput("");
 
     const known = ["run", "open", "search", "hello", "status"];
@@ -62,10 +65,16 @@ export default function Chat({ mode, setMode }) {
       setTimeout(() => setAlert(false), 3000);
     }
 
-    setMessages((prev) => [...prev, { type: "typing" }]);
+    setMessages((prev) => [
+  ...(Array.isArray(prev) ? prev : []),
+  {
+    type: "typing",
+    time: new Date().toTimeString().slice(0, 8),
+  }
+]);
 
     try {
-      const res = await fetch("http://192.168.29.13:8000/chat", {
+      const res = fetch("http://192.168.29.13:8000/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,8 +89,10 @@ export default function Chat({ mode, setMode }) {
       const action = data.action || null;
 
       setMessages((prev) => {
-        const updated = [...prev];
-        updated.pop();
+        const updated = Array.isArray(prev) ? [...prev] : [];
+        if (updated.length > 0 && updated[updated.length - 1]?.type === "typing") {
+            updated.pop();
+            }
 
         // =========================
         // ⚡ ACTION HANDLING
@@ -122,32 +133,32 @@ export default function Chat({ mode, setMode }) {
         }
 
         if (mode === "COMMAND") {
-            const timeNow = new Date().toTimeString().slice(0, 8);
+        const timeNow = new Date().toTimeString().slice(0, 8);
 
-            const openingMsg = {
-                type: "mia",
-                text: action?.message || "Processing...",
-                time: timeNow,
-            };
+        const openingMsg = {
+            type: "mia",
+            text: action?.message || "Processing...",
+            time: timeNow,
+        };
+        
+        // ✅ Stage 1: show "Opening..."
+        setTimeout(() => {
+            setMessages((prevMsgs) => [
+  ...(Array.isArray(prevMsgs) ? prevMsgs : []),
+  {
+    type: "mia",
+    text: action && action.url
+      ? "Operation completed"
+      : `${action?.app || "Application"} opened`,
+    time: new Date().toTimeString().slice(0, 8),
+  }
+]);
+        }, 0); // ⏱ delay
 
-            // ✅ Stage 1: show "Opening..."
-            setTimeout(() => {
-                setMessages((prevMsgs) => [
-                ...prevMsgs,
-                {
-                    type: "mia",
-                    text: action?.url
-                    ? "Operation completed"
-                    : `${action?.app || "Application"} opened`,
-                    time: new Date().toTimeString().slice(0, 8),
-                },
-                ]);
-            }, 800); // ⏱ delay
-
-            return [...updated, openingMsg];
-            }
+        return [...updated, openingMsg];
+        }
       });
-
+        
       // =========================
       // 🌐 FIXED URL HANDLING
       // =========================
@@ -177,8 +188,8 @@ export default function Chat({ mode, setMode }) {
 
     } catch (err) {
       setMessages((prev) => {
-        const updated = [...prev];
-        updated.pop();
+        const updated = Array.isArray(prev) ? [...prev] : [];
+        if (updated.length > 0) updated.pop();
 
         return [
           ...updated,
@@ -247,12 +258,11 @@ export default function Chat({ mode, setMode }) {
       {/* CHAT CORE */}
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ flex: 1, padding: "10px", overflowY: "auto" }}>
-          {messages.map((msg, i) => {
+          {(messages || []).map((msg, i) => {
             if (msg.type === "typing") {
               return (
                 <div key={i} style={{ marginBottom: "10px" }}>
                   <div
-                    className="glow-border"
                     style={{
                       display: "flex",
                       gap: "4px",
@@ -299,7 +309,7 @@ export default function Chat({ mode, setMode }) {
                   }}
                 >
                   <div style={{ fontSize: "8px", color: "#4a7a96" }}>
-                    {msg.type === "mia" ? `MIA · ${mode}` : "YOU"} • {msg.time}
+                    {msg.type === "mia" ? `MIA · ${mode}` : "YOU"} • {(msg.time || "--:--:--")}
                   </div>
                   {msg.text}
                 </div>
@@ -313,9 +323,9 @@ export default function Chat({ mode, setMode }) {
       <div style={{ borderLeft: "1px solid rgba(0,245,255,0.2)", padding: "10px" }}>
         <div style={{ fontSize: "10px", color: "#4a7a96" }}>// MEMORY</div>
 
-        {messages.slice(-6).map((m, i) => (
+        {(messages || []).slice(-6).map((m, i) => (
           <div key={i} style={{ fontSize: "10px", marginTop: "6px" }}>
-            › {m.text?.slice(0, 30)}
+            › {((m && m.text) ? m.text.slice(0, 30) : "")}
           </div>
         ))}
       </div>
@@ -384,7 +394,8 @@ export default function Chat({ mode, setMode }) {
       </style>
 
         {/* WINDOWS */}
-        {windows.map((win) => {
+        {
+        (windows || []).map((win) => {
         if (win.type === "terminal") {
             return (
             <TerminalWindow
