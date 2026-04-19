@@ -24,14 +24,22 @@ def route_action(user_input: str):
         return {"status": "cancelled", "message": "Action cancelled"}
 
     # =========================
-    # 🌐 OPEN + SEARCH (TOP PRIORITY)
+    # 🔥 HANDLE SEARCH FIRST (IMPORTANT)
     # =========================
-    if "open" in user_input and "search" in user_input:
-        query = user_input.split("search", 1)[1].replace("for", "").strip()
+    if "search" in user_input or "find" in user_input:
 
-        CURRENT_CONTEXT["mode"] = "google"
+        # extract query cleanly
+        query = user_input
+
+        # remove trigger words
+        for word in ["open google", "open", "search", "find", "and", "for"]:
+            query = query.replace(word, "")
+
+        query = query.strip()
 
         url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+        CURRENT_CONTEXT["mode"] = "google"
 
         return {
             "status": "success",
@@ -40,34 +48,15 @@ def route_action(user_input: str):
         }
 
     # =========================
-    # 🌐 GOOGLE MODE ACTIVATION
+    # 🌐 OPEN GOOGLE
     # =========================
-    if "open google" in user_input and "search" not in user_input:
+    if "open google" in user_input:
         CURRENT_CONTEXT["mode"] = "google"
 
         return {
             "status": "success",
             "message": "Opening Google",
             "url": "https://www.google.com"
-        }
-
-    # =========================
-    # 🔍 CONTEXT-AWARE SEARCH
-    # =========================
-    if "search" in user_input or "find" in user_input:
-        query = (
-            user_input
-            .replace("search", "")
-            .replace("find", "")
-            .strip()
-        )
-
-        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-
-        return {
-            "status": "success",
-            "message": f"Searching for {query}",
-            "url": url
         }
 
     # =========================
