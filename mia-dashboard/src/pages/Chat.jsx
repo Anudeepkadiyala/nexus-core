@@ -121,16 +121,31 @@ export default function Chat({ mode, setMode }) {
           return updated;
         }
 
-        if (mode === "COMMAND") return updated;
+        if (mode === "COMMAND") {
+            const timeNow = new Date().toTimeString().slice(0, 8);
 
-        return [
-          ...updated,
-          {
-            type: "mia",
-            text: data.response || data.message || "No response",
-            time: new Date().toTimeString().slice(0, 8),
-          },
-        ];
+            const openingMsg = {
+                type: "mia",
+                text: action?.message || "Processing...",
+                time: timeNow,
+            };
+
+            // ✅ Stage 1: show "Opening..."
+            setTimeout(() => {
+                setMessages((prevMsgs) => [
+                ...prevMsgs,
+                {
+                    type: "mia",
+                    text: action?.url
+                    ? "Operation completed"
+                    : `${action?.app || "Application"} opened`,
+                    time: new Date().toTimeString().slice(0, 8),
+                },
+                ]);
+            }, 800); // ⏱ delay
+
+            return [...updated, openingMsg];
+            }
       });
 
       // =========================
@@ -237,6 +252,7 @@ export default function Chat({ mode, setMode }) {
               return (
                 <div key={i} style={{ marginBottom: "10px" }}>
                   <div
+                    className="glow-border"
                     style={{
                       display: "flex",
                       gap: "4px",

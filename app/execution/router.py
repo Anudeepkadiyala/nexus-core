@@ -70,7 +70,7 @@ def route_action(user_input: str):
         }
 
     # =========================
-    # 🌐 OPEN WEBSITE
+    # 🌐 OPEN WEBSITE (LAZY MODE)
     # =========================
     if "open" in user_input:
         site = user_input.replace("open", "").strip()
@@ -78,14 +78,12 @@ def route_action(user_input: str):
         if "." not in site:
             site = site + ".com"
 
-        url = "https://" + site
-
         CONTEXT["last_app"] = site
 
         return {
             "status": "success",
-            "message": f"Opening {url}",
-            "url": url
+            "message": f"Opening {site}...",   # ✅ no URL returned
+            "app": site                  # ✅ store context only
         }
 
     # =========================
