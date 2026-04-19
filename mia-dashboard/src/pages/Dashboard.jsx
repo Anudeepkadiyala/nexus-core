@@ -1,107 +1,145 @@
-import Sidebar from "../components/Sidebar";
-import TopBar from "../components/TopBar";
-import CorePanel from "../components/CorePanel";
-import RightPanel from "../components/RightPanel";
-import ActionOverlay from "../components/ActionOverlay";
+import { useEffect, useState } from "react";
 
-export default function Dashboard(props) {
+export default function Dashboard() {
+  const [latency, setLatency] = useState(138);
+  const [memory, setMemory] = useState(64);
+  const [session, setSession] = useState(0);
+
+  // Session timer
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSession((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Simulated live metrics
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLatency(120 + Math.floor(Math.random() * 40));
+      setMemory(60 + Math.floor(Math.random() * 10));
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = () => {
+    const m = String(Math.floor(session / 60)).padStart(2, "0");
+    const s = String(session % 60).padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  const cardStyle = {
+    background: "#041525",
+    border: "1px solid rgba(0,245,255,0.2)",
+    padding: "12px",
+    borderRadius: "4px",
+    position: "relative",
+  };
+
+  const labelStyle = {
+    fontSize: "10px",
+    color: "#4a7a96",
+    fontFamily: "Orbitron",
+    marginBottom: "6px",
+  };
+
+  const valueStyle = {
+    fontSize: "22px",
+    color: "#00f5ff",
+    fontFamily: "Orbitron",
+    textShadow: "0 0 10px rgba(0,245,255,0.5)",
+  };
+
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      
-      <TopBar mode={props.mode} setMode={props.setMode} />
+    <div
+      style={{
+        padding: "14px",
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        gap: "10px",
+        color: "#cce8f4",
+      }}
+    >
+      {/* 🔥 TOP METRICS */}
 
-      <div style={{ flex: 1, display: "flex" }}>
-        
-        <Sidebar />
-
-        {/* CENTER */}
-        <div
-          style={{
-            flex: 2,
-            display: "flex",
-            flexDirection: "column",
-            height: "100%",
-          }}
-        >
-          <CorePanel
-            chat={props.chat}
-            chatEndRef={props.chatEndRef}
-            message={props.message}
-            setMessage={props.setMessage}
-            sendMessage={props.sendMessage}
-            handleKeyPress={props.handleKeyPress}
-          />
+      <div style={cardStyle}>
+        <div style={labelStyle}>// NEURAL CORE</div>
+        <div style={valueStyle}>98%</div>
+        <div style={{ fontSize: "12px", color: "#4a7a96" }}>
+          Fully operational
         </div>
-
-        {/* RIGHT PANEL */}
-        <div style={{ width: "400px", display: "flex" }}>
-          <RightPanel /> {/* ✅ CLEAN */}
-        </div>
-
       </div>
 
-      {/* 🔥 WINDOWS (SAFE FILTER) */}
-      {(props.windows || [])
-        .filter((win) => !(props.minimized || []).includes(win.id))
-        .map((win, index) => (
-            <ActionOverlay
-            key={win.id}
-            action={win}
-            zIndex={props.activeWindow === win.id ? 10000 : 9000 + index}
-            onFocus={() => props.setActiveWindow(win.id)}
-            onMinimize={() =>
-                props.setMinimized((prev) => [...prev, win.id])
-            }
-            onClose={() =>
-                props.setWindows((prev) =>
-                prev.filter((w) => w.id !== win.id)
-                )
-            }
-            />
-        ))}
+      <div style={cardStyle}>
+        <div style={labelStyle}>// MEMORY USAGE</div>
+        <div style={valueStyle}>{memory}%</div>
+        <div style={{ fontSize: "12px", color: "#4a7a96" }}>
+          847 entries indexed
+        </div>
+      </div>
 
-      {/* 🔥 DOCK */}
+      <div style={cardStyle}>
+        <div style={labelStyle}>// UPLINK LATENCY</div>
+        <div style={valueStyle}>{latency}ms</div>
+        <div style={{ fontSize: "12px", color: "#4a7a96" }}>
+          OpenAI bridge stable
+        </div>
+      </div>
+
+      {/* 🔥 STATUS ROW */}
+
+      <div style={cardStyle}>
+        <div style={labelStyle}>// ACTIVE MODE</div>
+        <div style={{ ...valueStyle, fontSize: "16px" }}>ORACLE</div>
+      </div>
+
+      <div style={cardStyle}>
+        <div style={labelStyle}>// SERVER</div>
+        <div style={{ ...valueStyle, fontSize: "16px" }}>ONLINE</div>
+      </div>
+
+      <div style={cardStyle}>
+        <div style={labelStyle}>// SESSION TIME</div>
+        <div style={{ ...valueStyle, fontSize: "16px" }}>
+          {formatTime()}
+        </div>
+      </div>
+
+      {/* 🔥 ACTIVITY LOG */}
+
       <div
         style={{
-          position: "fixed",
-          bottom: "10px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex",
-          gap: "10px",
-          background: "rgba(0,0,0,0.6)",
-          padding: "10px",
-          borderRadius: "10px",
-          border: "1px solid #00f0ff",
-          zIndex: 20000,
+          ...cardStyle,
+          gridColumn: "1 / -1",
         }}
       >
-        {(props.minimized || []).map((id) => {
-            const win = (props.windows || []).find((w) => w.id === id);
-          if (!win) return null;
+        <div style={labelStyle}>// RECENT ACTIVITY</div>
 
-          return (
-            <button
-              key={id}
-              onClick={() =>
-                props.setMinimized((prev) =>
-                  prev.filter((m) => m !== id)
-                )
-              }
-              style={{
-                background: "#00f0ff22",
-                border: "1px solid #00f0ff",
-                color: "#00f0ff",
-                padding: "5px 10px",
-                cursor: "pointer",
-              }}
-            >
-              💻
-            </button>
-          );
-        })}
+        {[
+          "System boot complete",
+          "OpenAI bridge connected",
+          "SQLite memory verified",
+          "Oracle mode initialized",
+        ].map((item, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "4px 0",
+              borderBottom: "1px solid rgba(0,245,255,0.05)",
+              fontSize: "12px",
+            }}
+          >
+            <span>{item}</span>
+            <span style={{ color: "#4a7a96" }}>
+              {new Date().toTimeString().slice(0, 8)}
+            </span>
+          </div>
+        ))}
       </div>
-
     </div>
   );
 }

@@ -4,6 +4,10 @@ from app.execution.state import PENDING_ACTION
 from app.execution.browser_control import open_website, search_web
 from app.execution.state import CURRENT_CONTEXT
 
+CONTEXT = {
+    "last_app": None
+}
+
 
 def route_action(user_input: str):
     user_input = user_input.lower().strip()
@@ -26,26 +30,43 @@ def route_action(user_input: str):
     # =========================
     # 🔥 HANDLE SEARCH FIRST (IMPORTANT)
     # =========================
-    if "search" in user_input or "find" in user_input:
+    if "search" in user_input:
+    query = user_input.replace("search", "").strip()
 
-        # extract query cleanly
-        query = user_input
+    # 🧠 USE CONTEXT
+    last_app = CONTEXT.get("last_app")
 
-        # remove trigger words
-        for word in ["open google", "open", "search", "find", "and", "for"]:
-            query = query.replace(word, "")
-
-        query = query.strip()
-
+    if last_app and "youtube" in last_app:
+        url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
+    else:
         url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
 
-        CURRENT_CONTEXT["mode"] = "google"
+    return {
+        "status": "success",
+        "message": f"Searching for {query}",
+        "url": url
+    }
 
-        return {
-            "status": "success",
-            "message": f"Searching for {query}",
-            "url": url
-        }
+    if "open" in user_input and "search" in user_input:
+    parts = user_input.split("search")
+    site = parts[0].replace("open", "").strip()
+    query = parts[1].strip()
+
+    if "." not in site:
+        site = site + ".com"
+
+    if "youtube" in site:
+        url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
+    else:
+        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+    CONTEXT["last_app"] = site
+
+    return {
+        "status": "success",
+        "message": f"Searching {query} on {site}",
+        "url": url
+    }
 
     # =========================
     # 🌐 OPEN GOOGLE
@@ -66,11 +87,12 @@ def route_action(user_input: str):
         site = user_input.replace("open", "").strip()
 
         if "." not in site:
-            site += ".com"
+            site = site + ".com"
 
-        CURRENT_CONTEXT["mode"] = None
+        url = "https://" + site
 
-        url = f"https://{site}"
+        # 🧠 SAVE CONTEXT
+        CONTEXT["last_app"] = site
 
         return {
             "status": "success",
