@@ -89,149 +89,157 @@ export default function Chat({ mode, setMode }) {
       const action = data.action || null;
 
     setMessages((prev) => {
-        const updated = Array.isArray(prev) ? [...prev] : [];
-        if (updated.length > 0 && updated[updated.length - 1]?.type === "typing") {
-            updated.pop();
-        }
+  const updated = Array.isArray(prev) ? [...prev] : [];
 
-        // =========================
-        // ⚡ ACTION HANDLING
-        // =========================
-        if (data.type === "action") {
-            if (mode === "ORACLE") {
-                return [
-                    ...updated,
-                    {
-                        type: "mia",
-                        text: "⚠ Execution blocked in ORACLE mode",
-                        time: new Date().toTimeString().slice(0, 8),
-                    },
-                ];
-            }
-            
-            // =========================
-            // 🔥 MULTI-STEP HANDLING
-            // =========================
-            if (action.status === "multi_action") {
-                const steps = action.steps || [];
+  // remove typing
+  if (updated.length > 0 && updated[updated.length - 1]?.type === "typing") {
+    updated.pop();
+  }
 
-                steps.forEach((item) => {
-                    const result = item.result || {};
+  const action = data.action || {};
 
-                    // TERMINAL
-                    if (result.output || result.error) {
-                        const newWindow = {
-                            id: Date.now() + Math.random(),
-                            type: "terminal",
-                            content: result.output || result.error,
-                            position: {
-                                x: 200 + Math.random() * 200,
-                                y: 100 + Math.random() * 150,
-                            },
-                            size: {
-                                width: 400,
-                                height: 250,
-                            },
-                        };
+  // =========================
+  // ⚡ ACTION HANDLING
+  // =========================
+  if (data.type === "action") {
 
-                        setWindows((prev) => {
-                            const safePrev = Array.isArray(prev) ? prev : [];
+    // 🟦 ORACLE MODE BLOCK
+    if (mode === "ORACLE") {
+      return [
+        ...updated,
+        {
+          type: "mia",
+          text: "⚠ Execution blocked in ORACLE mode",
+          time: new Date().toTimeString().slice(0, 8),
+        },
+      ];
+    }
 
-                            const exists = safePrev.some(
-                                (w) =>
-                                    w.type === "terminal" &&
-                                    w.content === newWindow.content
-                            );
+    // =========================
+    // 🔥 MULTI-STEP
+    // =========================
+    if (action.status === "multi_action") {
+      (action.steps || []).forEach((item) => {
+        const result = item.result || {};
 
-                            if (exists) return safePrev;
+        // TERMINAL
+        if (result.output || result.error) {
+          const content = result.output || result.error;
 
-                            return [...safePrev, newWindow];
-                        });
-                    }
+          setWindows((prev) => {
+            const safePrev = Array.isArray(prev) ? prev : [];
 
-                    // BROWSER
-                    if (result.url) {
-                        window.open(result.url, "_blank");
-                    }
-                });
+            const exists = safePrev.some(
+              (w) => w.type === "terminal" && w.content === content
+            );
 
-                return [
-                    ...updated,
-                    {
-                        type: "mia",
-                        text: action.message || "Multi-step executed",
-                        time: new Date().toTimeString().slice(0, 8),
-                    },
-                ];
-            }
+            if (exists) return safePrev;
 
-
-            // TERMINAL WINDOW
-            if (action?.output || action?.error) {
-                const newWindow = {
-                    id: Date.now() + Math.random(),
-                    type: "terminal",
-                    content: action.output || action.error,
-                    position: {
-                        x: 200 + Math.random() * 200,
-                        y: 100 + Math.random() * 150,
-                    },
-                    size: {
-                        width: 400,
-                        height: 250,
-                    },
-                };
-
-                setWindows((prev) => {
-                    const safePrev = Array.isArray(prev) ? prev : [];
-
-                    const alreadyExists = safePrev.some(
-                        (w) =>
-                        w.type === "terminal" &&
-                        w.content === (action.output || action.error)
-                    );
-
-                    if (alreadyExists) return safePrev;
-
-                    return [...safePrev, newWindow];
-                });
-                return updated;
-            }
-
-            return updated;
-        }
-
-        if (data.type === "ai") {
             return [
-                ...updated,
-                {
-                    type: "mia",
-                    text: data.message || "No response",
-                    time: new Date().toTimeString().slice(0, 8),
+              ...safePrev,
+              {
+                id: Date.now() + Math.random(),
+                type: "terminal",
+                content,
+                position: {
+                  x: 200 + Math.random() * 200,
+                  y: 100 + Math.random() * 150,
                 },
+                size: {
+                  width: 400,
+                  height: 250,
+                },
+              },
             ];
+          });
         }
 
-        if (mode === "COMMAND") {
-            return [
-                ...updated,
-                {
-                    type: "mia",
-                    text: action?.message || data.message || "Action executed",
-                    time: new Date().toTimeString().slice(0, 8),
-                },
-            ];
+        // BROWSER
+        if (result.url) {
+          window.open(result.url, "_blank");
         }
+      });
+
+      return [
+        ...updated,
+        {
+          type: "mia",
+          text: action.message || "Multi-step executed",
+          time: new Date().toTimeString().slice(0, 8),
+        },
+      ];
+    }
+
+    // =========================
+    // 🔹 SINGLE ACTION
+    // =========================
+
+    // TERMINAL
+    if (action.output || action.error) {
+      const content = action.output || action.error;
+
+      setWindows((prev) => {
+        const safePrev = Array.isArray(prev) ? prev : [];
+
+        const exists = safePrev.some(
+          (w) => w.type === "terminal" && w.content === content
+        );
+
+        if (exists) return safePrev;
 
         return [
-            ...updated,
-            {
-                type: "mia",
-                text: action?.message || data.message || "Action executed",
-                time: new Date().toTimeString().slice(0, 8),
+          ...safePrev,
+          {
+            id: Date.now() + Math.random(),
+            type: "terminal",
+            content,
+            position: {
+              x: 200 + Math.random() * 200,
+              y: 100 + Math.random() * 150,
             },
+            size: {
+              width: 400,
+              height: 250,
+            },
+          },
         ];
-    });
+      });
+    }
+
+    // BROWSER (🔥 IMPORTANT FIX)
+    if (action.url) {
+      window.open(action.url, "_blank");
+    }
+
+    return [
+      ...updated,
+      {
+        type: "mia",
+        text: action.message || "Action executed",
+        time: new Date().toTimeString().slice(0, 8),
+      },
+    ];
+  }
+
+  // =========================
+  // 🧠 AI RESPONSE
+  // =========================
+  if (data.type === "ai") {
+    return [
+      ...updated,
+      {
+        type: "mia",
+        text: data.message || "No response",
+        time: new Date().toTimeString().slice(0, 8),
+      },
+    ];
+  }
+
+  // =========================
+  // FALLBACK
+  // =========================
+  return updated;
+});
       
         
       // =========================

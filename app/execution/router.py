@@ -25,14 +25,29 @@ def split_multi_step_command(user_input: str):
 def plan_task(user_input: str):
     text = user_input.lower().strip()
 
-    # 🔥 AI-like intent patterns
-    if "find" in text or "search for" in text:
-        query = text.replace("find", "").replace("search for", "").strip()
+    # 🔥 SEARCH INTENTS
+    if "find" in text or "search" in text:
+        query = text.replace("find", "").replace("search", "").strip()
         return [
-            f"open google",
+            "open google",
             f"search {query}"
         ]
 
+    # 🔥 WEATHER
+    if "weather" in text:
+        return [
+            "open google",
+            f"search {text}"
+        ]
+
+    # 🔥 NEWS
+    if "news" in text:
+        return [
+            "open google",
+            f"search {text}"
+        ]
+
+    # 🔥 WATCH / VIDEO
     if "watch" in text:
         query = text.replace("watch", "").strip()
         return [
@@ -40,7 +55,8 @@ def plan_task(user_input: str):
             f"search {query}"
         ]
 
-    if "check" in text and "news" in text:
+    # 🔥 CHECK / LOOKUP (generic)
+    if "check" in text or "lookup" in text:
         return [
             "open google",
             f"search {text}"
