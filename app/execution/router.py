@@ -27,7 +27,20 @@ def route_action(user_input: str):
     # =========================
     if "open" in user_input:
 
-        # 🔥 HANDLE: open google and search something
+        # 🔥 HANDLE: "open google and search ..."
+        if "and search" in user_input:
+            parts = user_input.split("and search", 1)
+            query = parts[1].strip()
+
+            url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+            return {
+                "status": "success",
+                "message": f"Searching for {query}",
+                "url": url
+            }
+
+        # 🔥 HANDLE: "open google search ..."
         if "search" in user_input:
             parts = user_input.split("search", 1)
             query = parts[1].strip()
