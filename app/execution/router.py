@@ -24,49 +24,7 @@ def route_action(user_input: str):
         return {"status": "cancelled", "message": "Action cancelled"}
 
     # =========================
-    # 🌐 GOOGLE MODE ACTIVATION
-    # =========================
-    if "open google" in user_input:
-        CURRENT_CONTEXT["mode"] = "google"
-
-        url = "https://www.google.com"
-
-        return {
-            "status": "success",
-            "message": "Opening Google",
-            "url": url
-        }
-
-
-    # =========================
-    # 🔍 CONTEXT-AWARE SEARCH
-    # =========================
-    if "search" in user_input or "find" in user_input:
-
-        query = user_input.replace("search", "").replace("find", "").strip()
-
-        # 🔥 IF IN GOOGLE MODE
-        if CURRENT_CONTEXT["mode"] == "google":
-            url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-
-            return {
-                "status": "success",
-                "message": f"Searching Google for {query}",
-                "url": url
-            }
-
-        # 🔥 DEFAULT SEARCH
-        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-
-        return {
-            "status": "success",
-            "message": f"Searching for {query}",
-            "url": url
-        }
-
-
-    # =========================
-    # 🌐 OPEN + SEARCH COMBINED
+    # 🌐 OPEN + SEARCH (TOP PRIORITY)
     # =========================
     if "open" in user_input and "search" in user_input:
         query = user_input.split("search", 1)[1].strip()
@@ -81,6 +39,36 @@ def route_action(user_input: str):
             "url": url
         }
 
+    # =========================
+    # 🌐 GOOGLE MODE ACTIVATION
+    # =========================
+    if "open google" in user_input:
+        CURRENT_CONTEXT["mode"] = "google"
+
+        return {
+            "status": "success",
+            "message": "Opening Google",
+            "url": "https://www.google.com"
+        }
+
+    # =========================
+    # 🔍 CONTEXT-AWARE SEARCH
+    # =========================
+    if "search" in user_input or "find" in user_input:
+        query = (
+            user_input
+            .replace("search", "")
+            .replace("find", "")
+            .strip()
+        )
+
+        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+        return {
+            "status": "success",
+            "message": f"Searching for {query}",
+            "url": url
+        }
 
     # =========================
     # 🌐 NORMAL OPEN
@@ -91,27 +79,13 @@ def route_action(user_input: str):
         if "." not in site:
             site += ".com"
 
-        CURRENT_CONTEXT["mode"] = None  # reset context
+        CURRENT_CONTEXT["mode"] = None
 
         url = f"https://{site}"
 
         return {
             "status": "success",
             "message": f"Opening {url}",
-            "url": url
-        }
-        
-    # =========================
-    # 🔍 SEARCH ONLY
-    # =========================
-    if "search" in user_input:
-        query = user_input.replace("search", "").strip()
-
-        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-
-        return {
-            "status": "success",
-            "message": f"Searching for {query}",
             "url": url
         }
 
