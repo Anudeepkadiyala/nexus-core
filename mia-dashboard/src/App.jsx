@@ -8,7 +8,9 @@ function App() {
   const [chat, setChat] = useState([]);
   const [mode, setMode] = useState("oracle");
 
-  const [action, setAction] = useState(null); // 🔥 NEW
+  const [windows, setWindows] = useState([]);
+  const [activeWindow, setActiveWindow] = useState(null);
+  const [minimized, setMinimized] = useState([]);
 
   const chatEndRef = useRef(null);
 
@@ -43,14 +45,20 @@ function App() {
           { role: "mia", text: data.message }
         ]);
 
-        setAction(data.action); // store action
+        setWindows((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            ...data.action
+          }
+        ]); // store action
       } else {
         setChat([
           ...newChat,
           { role: "mia", text: data.message }
         ]);
 
-        setAction(null); // reset
+        // do nothing (we don't clear windows anymore)
       }
 
     } catch (err) {
@@ -79,8 +87,12 @@ function App() {
       mode={mode}
       setMode={setMode}
       chatEndRef={chatEndRef}
-      action={action} // 🔥 NEW
-      setAction={setAction}
+      windows={windows}
+      setWindows={setWindows}
+      activeWindow={activeWindow}        // 🔥 NEW
+      setActiveWindow={setActiveWindow}  // 🔥 NEW
+      minimized={minimized}              // 🔥 NEW
+      setMinimized={setMinimized}        // 🔥 NEW
     />
   );
 }

@@ -2,18 +2,29 @@ import subprocess
 
 def run_command(command: str):
     try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-        
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+
+        output = result.stdout.strip()
+        error = result.stderr.strip()
+
         return {
             "status": "success",
-            "output": result.stdout,
-            "error": result.stderr
+            "message": "Command executed",
+            "output": output if output else "(no output)",
+            "error": error
         }
-    
+
     except Exception as e:
         return {
             "status": "error",
-            "message": str(e)
+            "message": str(e),
+            "output": "",
+            "error": str(e)
         }
 
 
