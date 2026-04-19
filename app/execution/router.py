@@ -7,9 +7,46 @@ CONTEXT = {
     "last_app": None
 }
 
+def split_multi_step_command(user_input: str):
+    text = user_input.strip().lower()
+
+    separators = [" then ", " and "]
+    steps = [text]
+
+    for sep in separators:
+        new_steps = []
+        for step in steps:
+            parts = [p.strip() for p in step.split(sep) if p.strip()]
+            new_steps.extend(parts)
+        steps = new_steps
+
+    return steps
 
 def route_action(user_input: str):
     user_input = user_input.lower().strip()
+
+    # =========================
+    # MULTI-STEP EXECUTION
+    # =========================
+    steps = split_multi_step_command(user_input)
+
+    if len(steps) > 1:
+        results = []
+
+        for step in steps:
+            result = route_action(step)
+
+            if result.get("status") != "no_action":
+                results.append({
+                    "step": step,
+                    "result": result
+                })
+
+        return {
+            "status": "multi_action",
+            "message": f"Executed {len(results)} steps",
+            "steps": results
+        }
 
     # =========================
     # HANDLE CONFIRMATION

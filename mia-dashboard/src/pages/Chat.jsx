@@ -74,7 +74,7 @@ export default function Chat({ mode, setMode }) {
 ]);
 
     try {
-      const res = fetch("http://192.168.29.13:8000/chat", {
+      const res = await fetch("http://192.168.29.13:8000/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,76 +88,94 @@ export default function Chat({ mode, setMode }) {
       const data = await res.json();
       const action = data.action || null;
 
-      setMessages((prev) => {
+    setMessages((prev) => {
         const updated = Array.isArray(prev) ? [...prev] : [];
         if (updated.length > 0 && updated[updated.length - 1]?.type === "typing") {
             updated.pop();
-            }
+        }
 
         // =========================
         // ⚡ ACTION HANDLING
         // =========================
         if (data.type === "action") {
-          if (mode === "ORACLE") {
-            return [
-              ...updated,
-              {
-                type: "mia",
-                text: "⚠ Execution blocked in ORACLE mode",
-                time: new Date().toTimeString().slice(0, 8),
-              },
-            ];
-          }
+            if (mode === "ORACLE") {
+                return [
+                    ...updated,
+                    {
+                        type: "mia",
+                        text: "⚠ Execution blocked in ORACLE mode",
+                        time: new Date().toTimeString().slice(0, 8),
+                    },
+                ];
+            }
 
-          // TERMINAL WINDOW
-          if (action?.output || action?.error) {
-            const newWindow = {
-              id: Date.now() + Math.random(),
-              type: "terminal",
-              content: action.output || action.error,
-              position: {
-                x: 200 + Math.random() * 200,
-                y: 100 + Math.random() * 150,
-              },
-              size: {
-                width: 400,
-                height: 250,
-              },
-            };
+            // TERMINAL WINDOW
+            if (action?.output || action?.error) {
+                const newWindow = {
+                    id: Date.now() + Math.random(),
+                    type: "terminal",
+                    content: action.output || action.error,
+                    position: {
+                        x: 200 + Math.random() * 200,
+                        y: 100 + Math.random() * 150,
+                    },
+                    size: {
+                        width: 400,
+                        height: 250,
+                    },
+                };
 
-            setWindows((prev) => [...prev, newWindow]);
+                setWindows((prev) => {
+                    const safePrev = Array.isArray(prev) ? prev : [];
+
+                    const alreadyExists = safePrev.some(
+                        (w) =>
+                        w.type === "terminal" &&
+                        w.content === (action.output || action.error)
+                    );
+
+                    if (alreadyExists) return safePrev;
+
+                    return [...safePrev, newWindow];
+                });
+                return updated;
+            }
+
             return updated;
-          }
+        }
 
-          return updated;
+        if (data.type === "ai") {
+            return [
+                ...updated,
+                {
+                    type: "mia",
+                    text: data.message || "No response",
+                    time: new Date().toTimeString().slice(0, 8),
+                },
+            ];
         }
 
         if (mode === "COMMAND") {
-        const timeNow = new Date().toTimeString().slice(0, 8);
-
-        const openingMsg = {
-            type: "mia",
-            text: action?.message || "Processing...",
-            time: timeNow,
-        };
-        
-        // ✅ Stage 1: show "Opening..."
-        setTimeout(() => {
-            setMessages((prevMsgs) => [
-  ...(Array.isArray(prevMsgs) ? prevMsgs : []),
-  {
-    type: "mia",
-    text: action && action.url
-      ? "Operation completed"
-      : `${action?.app || "Application"} opened`,
-    time: new Date().toTimeString().slice(0, 8),
-  }
-]);
-        }, 0); // ⏱ delay
-
-        return [...updated, openingMsg];
+            return [
+                ...updated,
+                {
+                    type: "mia",
+                    text: action?.message || data.message || "Action executed",
+                    time: new Date().toTimeString().slice(0, 8),
+                },
+            ];
         }
-      });
+
+        return [
+            ...updated,
+            {
+                type: "mia",
+                text: action?.message || data.message || "Action executed",
+                time: new Date().toTimeString().slice(0, 8),
+            },
+        ];
+    });
+      
         
       // =========================
       // 🌐 FIXED URL HANDLING
