@@ -1,9 +1,8 @@
 from app.execution.system_control import run_command, open_application
 from app.execution.security import is_dangerous, is_safe
 from app.execution.state import PENDING_ACTION
-from app.execution.browser_control import open_website, search_web
-from app.execution.state import CURRENT_CONTEXT
 
+# 🧠 CONTEXT MEMORY
 CONTEXT = {
     "last_app": None
 }
@@ -28,60 +27,50 @@ def route_action(user_input: str):
         return {"status": "cancelled", "message": "Action cancelled"}
 
     # =========================
-    # 🔥 HANDLE SEARCH FIRST (IMPORTANT)
+    # 🌐 OPEN + SEARCH (TOP PRIORITY)
     # =========================
-    if "search" in user_input:
-    query = user_input.replace("search", "").strip()
-
-    # 🧠 USE CONTEXT
-    last_app = CONTEXT.get("last_app")
-
-    if last_app and "youtube" in last_app:
-        url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
-    else:
-        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-
-    return {
-        "status": "success",
-        "message": f"Searching for {query}",
-        "url": url
-    }
-
     if "open" in user_input and "search" in user_input:
-    parts = user_input.split("search")
-    site = parts[0].replace("open", "").strip()
-    query = parts[1].strip()
+        parts = user_input.split("search")
+        site = parts[0].replace("open", "").strip()
+        query = parts[1].strip()
 
-    if "." not in site:
-        site = site + ".com"
+        if "." not in site:
+            site = site + ".com"
 
-    if "youtube" in site:
-        url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
-    else:
-        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+        if "youtube" in site:
+            url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
+        else:
+            url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
 
-    CONTEXT["last_app"] = site
-
-    return {
-        "status": "success",
-        "message": f"Searching {query} on {site}",
-        "url": url
-    }
-
-    # =========================
-    # 🌐 OPEN GOOGLE
-    # =========================
-    if "open google" in user_input:
-        CURRENT_CONTEXT["mode"] = "google"
+        CONTEXT["last_app"] = site
 
         return {
             "status": "success",
-            "message": "Opening Google",
-            "url": "https://www.google.com"
+            "message": f"Searching {query} on {site}",
+            "url": url
         }
 
     # =========================
-    # 🌐 NORMAL OPEN
+    # 🔍 SEARCH ONLY (USES CONTEXT)
+    # =========================
+    if "search" in user_input:
+        query = user_input.replace("search", "").strip()
+
+        last_app = CONTEXT.get("last_app")
+
+        if last_app and "youtube" in last_app:
+            url = f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}"
+        else:
+            url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+        return {
+            "status": "success",
+            "message": f"Searching for {query}",
+            "url": url
+        }
+
+    # =========================
+    # 🌐 OPEN WEBSITE
     # =========================
     if "open" in user_input:
         site = user_input.replace("open", "").strip()
@@ -91,7 +80,6 @@ def route_action(user_input: str):
 
         url = "https://" + site
 
-        # 🧠 SAVE CONTEXT
         CONTEXT["last_app"] = site
 
         return {
@@ -103,7 +91,7 @@ def route_action(user_input: str):
     # =========================
     # OPEN APPLICATION
     # =========================
-    if "open" in user_input:
+    if "app" in user_input:
         app_name = user_input.replace("open", "").strip()
         return open_application(app_name)
 
