@@ -53,6 +53,8 @@ def route_action(user_input: str):
         "message": f"Opening {url}",
         "url": url
     }
+
+    
     if "search" in user_input:
     query = user_input.replace("search", "").strip()
 
