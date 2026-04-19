@@ -56,19 +56,32 @@ async def chat(request: ChatRequest):
     raw_input = request.message
     user_input = parse_intent(raw_input)
 
-    # =========================
-    # ⚙️ STEP 1: Try execution
-    # =========================
-    action_result = route_action(user_input)
+    # 🔥 NEW: GET MODE FROM FRONTEND
+    mode = getattr(request, "mode", "ORACLE")
 
-    # ✅ FIX 1: SAFETY CHECK
-    if not action_result or not isinstance(action_result, dict):
-        action_result = {
-            "status": "no_action"
+    # =========================
+    # 🟦 ORACLE MODE (AI ONLY)
+    # =========================
+    if mode == "ORACLE":
+        ai_response = ask_mia(user_input)
+
+        if not ai_response:
+            ai_response = "I'm here, Sir. How can I assist you?"
+
+        return {
+            "type": "ai",
+            "message": ai_response
         }
 
-    # ✅ FIX 2: SAFE ACCESS
-    if action_result.get("status") != "no_action":
+    # =========================
+    # 🟧 COMMAND MODE (ACTION ONLY)
+    # =========================
+    elif mode == "COMMAND":
+        action_result = route_action(user_input)
+
+        if not action_result or not isinstance(action_result, dict):
+            action_result = {"status": "no_action"}
+
         return {
             "type": "action",
             "message": action_result.get("message", "Action executed"),
@@ -76,17 +89,28 @@ async def chat(request: ChatRequest):
         }
 
     # =========================
-    # 🧠 STEP 2: AI response
+    # 🟪 SYNTHESIS MODE (BOTH)
     # =========================
-    ai_response = ask_mia(user_input)
+    elif mode == "SYNTHESIS":
+        action_result = route_action(user_input)
+        ai_response = ask_mia(user_input)
 
-    # ✅ FIX 3: AI FALLBACK
-    if not ai_response:
-        ai_response = "I'm here, Sir. How can I assist you?"
+        if not ai_response:
+            ai_response = "I'm here, Sir."
 
+        return {
+            "type": "action",
+            "message": action_result.get("message", ai_response),
+            "action": action_result,
+            "response": ai_response
+        }
+
+    # =========================
+    # FALLBACK
+    # =========================
     return {
         "type": "ai",
-        "message": ai_response
+        "message": "Unknown mode"
     }
 # =========================
 # 🌍 NEWS (RSS SYSTEM)
