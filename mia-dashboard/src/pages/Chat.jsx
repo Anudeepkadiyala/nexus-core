@@ -136,7 +136,7 @@ export default function Chat({ mode, setMode }) {
       // =========================
       // 🌐 FIXED URL HANDLING
       // =========================
-      if (action && action.url) {
+      if (action && action.url && userText.toLowerCase().includes("search")) {
         const blockedSites = ["google", "youtube"];
         const isBlocked = blockedSites.some((site) =>
           action.url.includes(site)
@@ -176,7 +176,7 @@ export default function Chat({ mode, setMode }) {
       });
     }
   };
-  
+
   return (
     <div
       style={{
