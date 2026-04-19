@@ -2,6 +2,7 @@ from app.execution.system_control import run_command, open_application
 from app.execution.security import is_dangerous, is_safe
 from app.execution.state import PENDING_ACTION
 from app.execution.browser_control import open_website, search_web
+from app.execution.state import CURRENT_CONTEXT
 
 
 def route_action(user_input: str):
@@ -23,50 +24,83 @@ def route_action(user_input: str):
         return {"status": "cancelled", "message": "Action cancelled"}
 
     # =========================
-    # 🌐 OPEN + SEARCH (SMART)
+    # 🌐 GOOGLE MODE ACTIVATION
+    # =========================
+    if "open google" in user_input:
+        CURRENT_CONTEXT["mode"] = "google"
+
+        url = "https://www.google.com"
+
+        return {
+            "status": "success",
+            "message": "Opening Google",
+            "url": url
+        }
+
+
+    # =========================
+    # 🔍 CONTEXT-AWARE SEARCH
+    # =========================
+    if "search" in user_input or "find" in user_input:
+
+        query = user_input.replace("search", "").replace("find", "").strip()
+
+        # 🔥 IF IN GOOGLE MODE
+        if CURRENT_CONTEXT["mode"] == "google":
+            url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+            return {
+                "status": "success",
+                "message": f"Searching Google for {query}",
+                "url": url
+            }
+
+        # 🔥 DEFAULT SEARCH
+        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+        return {
+            "status": "success",
+            "message": f"Searching for {query}",
+            "url": url
+        }
+
+
+    # =========================
+    # 🌐 OPEN + SEARCH COMBINED
+    # =========================
+    if "open" in user_input and "search" in user_input:
+        query = user_input.split("search", 1)[1].strip()
+
+        CURRENT_CONTEXT["mode"] = "google"
+
+        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+        return {
+            "status": "success",
+            "message": f"Searching for {query}",
+            "url": url
+        }
+
+
+    # =========================
+    # 🌐 NORMAL OPEN
     # =========================
     if "open" in user_input:
-
-        # 🔥 HANDLE: "open google and search ..."
-        if "and search" in user_input:
-            parts = user_input.split("and search", 1)
-            query = parts[1].strip()
-
-            url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-
-            return {
-                "status": "success",
-                "message": f"Searching for {query}",
-                "url": url
-            }
-
-        # 🔥 HANDLE: "open google search ..."
-        if "search" in user_input:
-            parts = user_input.split("search", 1)
-            query = parts[1].strip()
-
-            url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-
-            return {
-                "status": "success",
-                "message": f"Searching for {query}",
-                "url": url
-            }
-
-        # 🔥 NORMAL OPEN
         site = user_input.replace("open", "").strip()
 
         if "." not in site:
-            site = site + ".com"
+            site += ".com"
 
-        url = "https://" + site
+        CURRENT_CONTEXT["mode"] = None  # reset context
+
+        url = f"https://{site}"
 
         return {
             "status": "success",
             "message": f"Opening {url}",
             "url": url
         }
-
+        
     # =========================
     # 🔍 SEARCH ONLY
     # =========================
