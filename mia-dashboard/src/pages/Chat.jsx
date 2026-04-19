@@ -108,6 +108,63 @@ export default function Chat({ mode, setMode }) {
                     },
                 ];
             }
+            
+            // =========================
+            // 🔥 MULTI-STEP HANDLING
+            // =========================
+            if (action.status === "multi_action") {
+                const steps = action.steps || [];
+
+                steps.forEach((item) => {
+                    const result = item.result || {};
+
+                    // TERMINAL
+                    if (result.output || result.error) {
+                        const newWindow = {
+                            id: Date.now() + Math.random(),
+                            type: "terminal",
+                            content: result.output || result.error,
+                            position: {
+                                x: 200 + Math.random() * 200,
+                                y: 100 + Math.random() * 150,
+                            },
+                            size: {
+                                width: 400,
+                                height: 250,
+                            },
+                        };
+
+                        setWindows((prev) => {
+                            const safePrev = Array.isArray(prev) ? prev : [];
+
+                            const exists = safePrev.some(
+                                (w) =>
+                                    w.type === "terminal" &&
+                                    w.content === newWindow.content
+                            );
+
+                            if (exists) return safePrev;
+
+                            return [...safePrev, newWindow];
+                        });
+                    }
+
+                    // BROWSER
+                    if (result.url) {
+                        window.open(result.url, "_blank");
+                    }
+                });
+
+                return [
+                    ...updated,
+                    {
+                        type: "mia",
+                        text: action.message || "Multi-step executed",
+                        time: new Date().toTimeString().slice(0, 8),
+                    },
+                ];
+            }
+
 
             // TERMINAL WINDOW
             if (action?.output || action?.error) {

@@ -22,8 +22,58 @@ def split_multi_step_command(user_input: str):
 
     return steps
 
+def plan_task(user_input: str):
+    text = user_input.lower().strip()
+
+    # 🔥 AI-like intent patterns
+    if "find" in text or "search for" in text:
+        query = text.replace("find", "").replace("search for", "").strip()
+        return [
+            f"open google",
+            f"search {query}"
+        ]
+
+    if "watch" in text:
+        query = text.replace("watch", "").strip()
+        return [
+            "open youtube",
+            f"search {query}"
+        ]
+
+    if "check" in text and "news" in text:
+        return [
+            "open google",
+            f"search {text}"
+        ]
+
+    # fallback
+    return [text]
+
 def route_action(user_input: str):
     user_input = user_input.lower().strip()
+
+    # =========================
+    # INTELLIGENT TASK PLANNING
+    # =========================
+    planned_steps = plan_task(user_input)
+
+    if len(planned_steps) > 1:
+        results = []
+
+        for step in planned_steps:
+            result = route_action(step)
+
+            if result.get("status") != "no_action":
+                results.append({
+                    "step": step,
+                    "result": result
+                })
+
+        return {
+            "status": "multi_action",
+            "message": f"Planned and executed {len(results)} steps",
+            "steps": results
+        }
 
     # =========================
     # MULTI-STEP EXECUTION
