@@ -23,16 +23,19 @@ def parse_intent(user_input: str):
         return "open gedit"
 
     # =========================
-    # WEB INTENTS
+    # WEB INTENTS (FIXED)
     # =========================
+    if "open" in text and "search" in text:
+        return user_input  # let router handle both
+
+    if "search" in text:
+        return user_input
+
     if "youtube" in text:
         return "open youtube.com"
 
     if "google" in text:
         return "open google.com"
-
-    if "search" in text:
-        return user_input  # already handled
 
     # =========================
     # DEFAULT
