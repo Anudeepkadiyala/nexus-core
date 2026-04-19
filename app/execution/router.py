@@ -27,7 +27,7 @@ def route_action(user_input: str):
     # 🌐 OPEN + SEARCH (TOP PRIORITY)
     # =========================
     if "open" in user_input and "search" in user_input:
-        query = user_input.split("search", 1)[1].strip()
+        query = user_input.split("search", 1)[1].replace("for", "").strip()
 
         CURRENT_CONTEXT["mode"] = "google"
 
@@ -42,7 +42,7 @@ def route_action(user_input: str):
     # =========================
     # 🌐 GOOGLE MODE ACTIVATION
     # =========================
-    if "open google" in user_input:
+    if "open google" in user_input and "search" not in user_input:
         CURRENT_CONTEXT["mode"] = "google"
 
         return {
