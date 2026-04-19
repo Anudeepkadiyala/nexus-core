@@ -65,7 +65,7 @@ def plan_task(user_input: str):
     # fallback
     return [text]
 
-def route_action(user_input: str):
+def route_action(user_input: str, is_substep=False):
     user_input = user_input.lower().strip()
 
     # =========================
@@ -73,11 +73,14 @@ def route_action(user_input: str):
     # =========================
     planned_steps = plan_task(user_input)
 
+    if not is_substep:
+    planned_steps = plan_task(user_input)
+
     if len(planned_steps) > 1:
         results = []
 
         for step in planned_steps:
-            result = route_action(step)
+            result = route_action(step, is_substep=True)
 
             if result.get("status") != "no_action":
                 results.append({
@@ -87,7 +90,7 @@ def route_action(user_input: str):
 
         return {
             "status": "multi_action",
-            "message": f"Planned and executed {len(results)} steps",
+            "message": f"Executed {len(results)} steps",
             "steps": results
         }
 
