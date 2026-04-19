@@ -25,13 +25,44 @@ def route_action(user_input: str):
     # =========================
     # 🌐 BROWSER CONTROL (FIXED POSITION)
     # =========================
-    if "open" in user_input and "." in user_input:
-        site = user_input.replace("open", "").strip()
-        return open_website(site)
+    if "open" in user_input:
 
+    # 🔥 HANDLE SEARCH
     if "search" in user_input:
-        query = user_input.replace("search", "").strip()
-        return search_web(query)
+        parts = user_input.split("search")
+        query = parts[1].strip()
+
+        search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+        return {
+            "status": "success",
+            "message": f"Searching for {query}",
+            "url": search_url
+        }
+
+    # 🔥 NORMAL OPEN
+    site = user_input.replace("open", "").strip()
+
+    if "." not in site:
+        site = site + ".com"
+
+    url = "https://" + site
+
+    return {
+        "status": "success",
+        "message": f"Opening {url}",
+        "url": url
+    }
+    if "search" in user_input:
+    query = user_input.replace("search", "").strip()
+
+    url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+    return {
+        "status": "success",
+        "message": f"Searching for {query}",
+        "url": url
+    }
 
     # =========================
     # OPEN APPLICATION
