@@ -71,28 +71,27 @@ def route_action(user_input: str, is_substep=False):
     # =========================
     # INTELLIGENT TASK PLANNING
     # =========================
-    planned_steps = plan_task(user_input)
 
     if not is_substep:
-    planned_steps = plan_task(user_input)
+        planned_steps = plan_task(user_input)
 
-    if len(planned_steps) > 1:
-        results = []
+        if len(planned_steps) > 1:
+            results = []
 
-        for step in planned_steps:
-            result = route_action(step, is_substep=True)
+            for step in planned_steps:
+                result = route_action(step, is_substep=True)
 
-            if result.get("status") != "no_action":
-                results.append({
-                    "step": step,
-                    "result": result
-                })
+                if result.get("status") != "no_action":
+                    results.append({
+                        "step": step,
+                        "result": result
+                    })
 
-        return {
-            "status": "multi_action",
-            "message": f"Executed {len(results)} steps",
-            "steps": results
-        }
+            return {
+                "status": "multi_action",
+                "message": f"Executed {len(results)} steps",
+                "steps": results
+            }
 
     # =========================
     # MULTI-STEP EXECUTION
