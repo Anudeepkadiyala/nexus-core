@@ -23,48 +23,50 @@ def route_action(user_input: str):
         return {"status": "cancelled", "message": "Action cancelled"}
 
     # =========================
-    # 🌐 BROWSER CONTROL (FIXED POSITION)
+    # 🌐 OPEN + SEARCH (SMART)
     # =========================
     if "open" in user_input:
 
-    # 🔥 HANDLE SEARCH
-    if "search" in user_input:
-        parts = user_input.split("search")
-        query = parts[1].strip()
+        # 🔥 HANDLE: open google and search something
+        if "search" in user_input:
+            parts = user_input.split("search", 1)
+            query = parts[1].strip()
 
-        search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+            url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
+
+            return {
+                "status": "success",
+                "message": f"Searching for {query}",
+                "url": url
+            }
+
+        # 🔥 NORMAL OPEN
+        site = user_input.replace("open", "").strip()
+
+        if "." not in site:
+            site = site + ".com"
+
+        url = "https://" + site
+
+        return {
+            "status": "success",
+            "message": f"Opening {url}",
+            "url": url
+        }
+
+    # =========================
+    # 🔍 SEARCH ONLY
+    # =========================
+    if "search" in user_input:
+        query = user_input.replace("search", "").strip()
+
+        url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
 
         return {
             "status": "success",
             "message": f"Searching for {query}",
-            "url": search_url
+            "url": url
         }
-
-    # 🔥 NORMAL OPEN
-    site = user_input.replace("open", "").strip()
-
-    if "." not in site:
-        site = site + ".com"
-
-    url = "https://" + site
-
-    return {
-        "status": "success",
-        "message": f"Opening {url}",
-        "url": url
-    }
-
-    
-    if "search" in user_input:
-    query = user_input.replace("search", "").strip()
-
-    url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
-
-    return {
-        "status": "success",
-        "message": f"Searching for {query}",
-        "url": url
-    }
 
     # =========================
     # OPEN APPLICATION
@@ -76,7 +78,7 @@ def route_action(user_input: str):
     # =========================
     # RUN COMMAND
     # =========================
-    elif "run" in user_input:
+    if "run" in user_input:
         command = user_input.replace("run", "").strip()
 
         if is_dangerous(command):
