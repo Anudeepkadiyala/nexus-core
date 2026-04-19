@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import TerminalWindow from "../components/TerminalWindow";
 import BrowserWindow from "../components/BrowserWindow";
 
@@ -6,16 +6,14 @@ export default function Chat({ mode, setMode }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [alert, setAlert] = useState(false);
-  const [windows, setWindows] = useState(() => {
-  const saved = localStorage.getItem("mia_windows");
-  return saved ? JSON.parse(saved) : [];
-});
+  const [windows, setWindows] = useState([]);
   const [activeWindow, setActiveWindow] = useState(null);
 
-    useEffect(() => {
-  localStorage.setItem("mia_windows", JSON.stringify(windows));
-}, [windows]);
+  // ✅ NEW (FIX)
+  const [externalUrl, setExternalUrl] = useState(null);
 
+  const browserRef = useRef(null);
+  const lastUrlRef = useRef(null);
 
   const modeColors = {
     ORACLE: "#00f5ff",
@@ -24,6 +22,25 @@ export default function Chat({ mode, setMode }) {
   };
 
   const accent = modeColors[mode] || "#00f5ff";
+
+  // =========================
+  // 🔥 FIX: HANDLE WINDOW HERE (ONLY ONCE)
+  // =========================
+  useEffect(() => {
+    if (!externalUrl) return;
+
+    if (browserRef.current && !browserRef.current.closed) {
+      browserRef.current.location.href = externalUrl;
+    } else {
+      const newWindow = window.open(
+        externalUrl,
+        "_blank",
+        "noopener,noreferrer,width=1200,height=800,left=200,top=100"
+      );
+
+      browserRef.current = newWindow;
+    }
+  }, [externalUrl]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -39,14 +56,12 @@ export default function Chat({ mode, setMode }) {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
-    // Alert
     const known = ["run", "open", "search", "hello", "status"];
     if (!known.some((k) => userText.toLowerCase().includes(k))) {
       setAlert(true);
       setTimeout(() => setAlert(false), 3000);
     }
 
-    // Typing indicator
     setMessages((prev) => [...prev, { type: "typing" }]);
 
     try {
@@ -55,105 +70,95 @@ export default function Chat({ mode, setMode }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-            message: userText,
-            mode: mode
+        body: JSON.stringify({
+          message: userText,
+          mode: mode,
         }),
       });
 
       const data = await res.json();
+      const action = data.action || null;
 
       setMessages((prev) => {
         const updated = [...prev];
         updated.pop();
 
-        // ACTION
+        // =========================
+        // ⚡ ACTION HANDLING
+        // =========================
         if (data.type === "action") {
-            // 🟦 ORACLE → block execution
-            if (mode === "ORACLE") {
-                return [
-                ...updated,
-                {
-                    type: "mia",
-                    text: "⚠ Execution blocked in ORACLE mode",
-                    time: new Date().toTimeString().slice(0, 8),
-                },
-                ];
-            }
-          const action = data.action || {};
+          if (mode === "ORACLE") {
+            return [
+              ...updated,
+              {
+                type: "mia",
+                text: "⚠ Execution blocked in ORACLE mode",
+                time: new Date().toTimeString().slice(0, 8),
+              },
+            ];
+          }
 
-          if (action.output || action.error) {
+          // TERMINAL WINDOW
+          if (action?.output || action?.error) {
             const newWindow = {
-                id: Date.now() + Math.random(),
-                type: "terminal",
-                content: action.output || action.error,
-                position: {
-                    x: 200 + Math.random() * 200,
-                    y: 100 + Math.random() * 150,
-                },
-                size: {
-                    width: 400,
-                    height: 250,
-                },
+              id: Date.now() + Math.random(),
+              type: "terminal",
+              content: action.output || action.error,
+              position: {
+                x: 200 + Math.random() * 200,
+                y: 100 + Math.random() * 150,
+              },
+              size: {
+                width: 400,
+                height: 250,
+              },
             };
 
-            setWindows((prev) => {
-                const exists = prev.some((w) => w.content === newWindow.content);
-                if (exists) return prev;
-                return [...prev, newWindow];
-            });
-
-            return updated; // no chat message
-          }
-
-          if (action.url) {
-            const blockedSites = ["google", "youtube"];
-
-            const isBlocked = blockedSites.some((site) =>
-              action.url.includes(site)
-            );
-
-            if (isBlocked) {
-              // OPEN EXTERNAL
-              window.open(action.url, "_blank");
-            } else {
-              // OPEN INTERNAL WINDOW
-              const newWindow = {
-                id: Date.now() + Math.random(),
-                type: "browser",
-                url: action.url,
-                position: {
-                  x: 300,
-                  y: 150,
-                },
-                size: {
-                  width: 600,
-                  height: 400,
-                },
-              };
-
-              setWindows((prev) => [...prev, newWindow]);
-            }
-
+            setWindows((prev) => [...prev, newWindow]);
             return updated;
           }
+
+          return updated;
         }
 
-        // 🟧 COMMAND MODE → no AI responses
-        if (mode === "COMMAND") {
-        return updated;
-        }
+        if (mode === "COMMAND") return updated;
 
-        const safeReply = data.response || data.message || "No response";
         return [
           ...updated,
           {
             type: "mia",
-            text: safeReply,
+            text: data.response || data.message || "No response",
             time: new Date().toTimeString().slice(0, 8),
           },
         ];
       });
+
+      // =========================
+      // 🌐 FIXED URL HANDLING
+      // =========================
+      if (action && action.url) {
+        const blockedSites = ["google", "youtube"];
+        const isBlocked = blockedSites.some((site) =>
+          action.url.includes(site)
+        );
+
+        if (isBlocked) {
+          if (lastUrlRef.current === action.url) return;
+
+          lastUrlRef.current = action.url;
+          setExternalUrl(action.url); // ✅ SAFE TRIGGER
+        } else {
+          const newWindow = {
+            id: Date.now() + Math.random(),
+            type: "browser",
+            url: action.url,
+            position: { x: 300, y: 150 },
+            size: { width: 600, height: 400 },
+          };
+
+          setWindows((prev) => [...prev, newWindow]);
+        }
+      }
 
     } catch (err) {
       setMessages((prev) => {
@@ -171,7 +176,7 @@ export default function Chat({ mode, setMode }) {
       });
     }
   };
-
+  
   return (
     <div
       style={{
