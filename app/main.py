@@ -9,11 +9,13 @@ from app.brain.memory import init_db
 from app.brain.ai import ask_mia
 from app.execution.router import route_action
 from app.execution.intent_parser import parse_intent
+from app.voice.router import router as voice_router
 
 # 🔥 Load env
 load_dotenv()
 
 app = FastAPI()
+app.include_router(voice_router, prefix="/voice")
 
 # ✅ CORS
 app.add_middleware(

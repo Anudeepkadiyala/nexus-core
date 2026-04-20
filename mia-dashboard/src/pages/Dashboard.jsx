@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export default function Dashboard() {
+export default function Dashboard({accent, mode}) {
   const [latency, setLatency] = useState(138);
   const [memory, setMemory] = useState(64);
   const [session, setSession] = useState(0);
@@ -32,17 +32,22 @@ export default function Dashboard() {
 
   const cardStyle = {
     background: "#041525",
-    border: "1px solid rgba(0,245,255,0.2)",
-    padding: "12px",
+    border: `1px solid ${accent}33`,
+    padding: "14px",
     borderRadius: "4px",
     position: "relative",
+    overflow: "hidden",
+
+    boxShadow: `0 0 10px ${accent}11`,
+    transition: "all 0.2s",
   };
 
   const labelStyle = {
     fontSize: "10px",
     color: "#4a7a96",
     fontFamily: "Orbitron",
-    marginBottom: "6px",
+    marginBottom: "8px",
+    letterSpacing: "0.1em",
   };
 
   const valueStyle = {
@@ -55,16 +60,37 @@ export default function Dashboard() {
   return (
     <div
       style={{
-        padding: "14px",
         display: "grid",
         gridTemplateColumns: "1fr 1fr 1fr",
-        gap: "10px",
+        gridTemplateRows: "auto auto 1fr",
+        gap: "12px",
+        padding: "16px",
+        background: "#020c14",
         color: "#cce8f4",
       }}
     >
       {/* 🔥 TOP METRICS */}
 
-      <div style={cardStyle}>
+      <div
+        style={cardStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 20px ${accent}55`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 10px ${accent}11`;
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "1px",
+            background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
+            opacity: 0.4,
+          }}
+        />
         <div style={labelStyle}>// NEURAL CORE</div>
         <div style={valueStyle}>98%</div>
         <div style={{ fontSize: "12px", color: "#4a7a96" }}>
@@ -72,7 +98,26 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div style={cardStyle}>
+      <div
+          style={cardStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = `0 0 20px ${accent}55`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = `0 0 10px ${accent}11`;
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "1px",
+              background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
+              opacity: 0.4,
+            }}
+          />
         <div style={labelStyle}>// MEMORY USAGE</div>
         <div style={valueStyle}>{memory}%</div>
         <div style={{ fontSize: "12px", color: "#4a7a96" }}>
@@ -80,7 +125,26 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div style={cardStyle}>
+      <div
+        style={cardStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 20px ${accent}55`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 10px ${accent}11`;
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "1px",
+            background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
+            opacity: 0.4,
+          }}
+        />
         <div style={labelStyle}>// UPLINK LATENCY</div>
         <div style={valueStyle}>{latency}ms</div>
         <div style={{ fontSize: "12px", color: "#4a7a96" }}>
@@ -90,19 +154,85 @@ export default function Dashboard() {
 
       {/* 🔥 STATUS ROW */}
 
-      <div style={cardStyle}>
+      <div
+        style={cardStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 20px ${accent}55`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 10px ${accent}11`;
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "1px",
+            background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
+            opacity: 0.4,
+          }}
+        />
         <div style={labelStyle}>// ACTIVE MODE</div>
-        <div style={{ ...valueStyle, fontSize: "16px" }}>ORACLE</div>
+        <div style={{ ...valueStyle, fontSize: "16px", letterSpacing: "0.08em" }}>ORACLE</div>
+        <div style={{ fontSize: "10px", color: "#4a7a96", marginTop: "4px" }}>
+          AI reasoning active
+        </div>
       </div>
 
-      <div style={cardStyle}>
+      <div
+        style={cardStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 20px ${accent}55`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 10px ${accent}11`;
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "1px",
+            background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
+            opacity: 0.4,
+          }}
+        />
         <div style={labelStyle}>// SERVER</div>
-        <div style={{ ...valueStyle, fontSize: "16px" }}>ONLINE</div>
+        <div style={{ ...valueStyle, fontSize: "16px", letterSpacing: "0.08em" }}>ONLINE</div>
+        <div style={{ fontSize: "10px", color: "#4a7a96", marginTop: "4px" }}>
+          Ubuntu · Local network
+        </div>
       </div>
 
-      <div style={cardStyle}>
+      <div
+        style={cardStyle}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 20px ${accent}55`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = `0 0 10px ${accent}11`;
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "1px",
+            background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
+            opacity: 0.4,
+          }}
+        />
         <div style={labelStyle}>// SESSION TIME</div>
-        <div style={{ ...valueStyle, fontSize: "16px" }}>
+        <div style={{ ...valueStyle, fontSize: "16px", letterSpacing: "0.08em" }}>
+          <div style={{ fontSize: "10px", color: "#4a7a96", marginTop: "4px" }}>
+            Current session runtime
+          </div>
           {formatTime()}
         </div>
       </div>

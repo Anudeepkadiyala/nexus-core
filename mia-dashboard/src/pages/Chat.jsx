@@ -119,8 +119,20 @@ export default function Chat({ mode, setMode }) {
     // 🔥 MULTI-STEP
     // =========================
     if (action.status === "multi_action") {
-      (action.steps || []).forEach((item) => {
+      const steps = action.steps || [];
+
+      const logMessages = [];
+
+      steps.forEach((item, index) => {
         const result = item.result || {};
+        const stepText = item.step || "Unknown step";
+
+        // 🧠 STEP LOG
+        logMessages.push({
+          type: "mia",
+          text: `[STEP ${index + 1}] ${stepText}`,
+          time: new Date().toTimeString().slice(0, 8),
+        });
 
         // TERMINAL
         if (result.output || result.error) {
@@ -160,14 +172,14 @@ export default function Chat({ mode, setMode }) {
         }
       });
 
-      return [
-        ...updated,
-        {
-          type: "mia",
-          text: action.message || "Multi-step executed",
-          time: new Date().toTimeString().slice(0, 8),
-        },
-      ];
+      // ✅ FINAL COMPLETE MESSAGE
+      logMessages.push({
+        type: "mia",
+        text: "✓ Execution complete",
+        time: new Date().toTimeString().slice(0, 8),
+      });
+
+      return [...updated, ...logMessages];
     }
 
     // =========================
@@ -290,11 +302,13 @@ export default function Chat({ mode, setMode }) {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "180px 1fr 180px",
+        gridTemplateColumns: "180px 1fr 165px", // FIXED
         gridTemplateRows: "1fr 60px",
         height: "calc(100vh - 48px)",
         color: "#cce8f4",
         fontFamily: "Exo 2",
+        background: "#020c14",
+        overflow: "hidden", // ✅ IMPORTANT
       }}
     >
       {/* ALERT */}
@@ -339,12 +353,15 @@ export default function Chat({ mode, setMode }) {
       </div>
 
       {/* CHAT CORE */}
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <div style={{ flex: 1, padding: "10px", overflowY: "auto" }}>
+      <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", gap: "8px", display: "flex", flexDirection: "column" }}>
           {(messages || []).map((msg, i) => {
+            const isStep = msg.text?.includes("STEP");
+            const isComplete = msg.text?.includes("EXECUTION COMPLETE");
+            const isDivider = msg.text?.includes("────");
             if (msg.type === "typing") {
               return (
-                <div key={i} style={{ marginBottom: "10px" }}>
+                <div key={i} style={{ marginBottom: "6px" }}>
                   <div
                     style={{
                       display: "flex",
@@ -374,27 +391,60 @@ export default function Chat({ mode, setMode }) {
               >
                 <div
                   style={{
-                    maxWidth: "70%",
-                    padding: "10px",
-                    border: `1px solid ${
-                      msg.type === "mia" ? accent : "#0a84ff"
-                    }`,
-                    background:
+                    maxWidth: "72%",
+                    padding: "10px 12px",
+                    fontSize: "11px",
+                    lineHeight: "1.6",
+                    border: isStep
+                      ? "1px solid #00f0ff55"
+                      : isComplete
+                      ? "1px solid #00ff9c"
+                      : isDivider
+                      ? "none"
+                      : `1px solid ${msg.type === "mia" ? accent : "#0a84ff"}`,
+                    borderLeft: msg.type === "mia" && !isStep && !isComplete
+                      ? `2px solid ${accent}`
+                      : undefined,
+                    borderRight: msg.type === "user"
+                      ? "2px solid #0a84ff"
+                      : undefined,
+                    background: isStep
+                      ? "rgba(0, 20, 40, 0.6)"
+                      : isComplete
+                      ? "rgba(0, 40, 20, 0.6)"
+                      : isDivider
+                      ? "transparent"
+                      : msg.type === "mia"
+                      ? "#041525"
+                      : "rgba(10,132,255,0.08)",
+                    color: isComplete
+                      ? "#00ff9c"
+                      : isStep
+                      ? "#00f0ff"
+                      : msg.type === "mia"
+                      ? "#cce8f4"
+                      : "#a8d4ff",
+                    clipPath: isStep || isComplete
+                      ? "none"
+                      : msg.type === "mia"
+                      ? "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%)"
+                      : "polygon(6px 0, 100% 0, 100% 100%, 0 100%, 0 6px)",
+                    boxShadow:
                       msg.type === "mia"
-                        ? "#041525"
-                        : "rgba(10,132,255,0.1)",
-                    color:
-                      msg.type === "mia" ? "#cce8f4" : "#a8d4ff",
-                    clipPath:
-                      msg.type === "mia"
-                        ? "polygon(0 0, 95% 0, 100% 10%, 100% 100%, 0 100%)"
-                        : "polygon(5% 0, 100% 0, 100% 100%, 0 100%, 0 10%)",
+                      ? `0 0 8px ${accent}22`
+                      : "0 0 6px rgba(10,132,255,0.2)",
                   }}
                 >
-                  <div style={{ fontSize: "8px", color: "#4a7a96" }}>
+                  <div style={{ fontSize: "7px", color: "#4a7a96", marginBottom: "4px", letterSpacing: "0.08em" }}>
                     {msg.type === "mia" ? `MIA · ${mode}` : "YOU"} • {(msg.time || "--:--:--")}
                   </div>
-                  {msg.text}
+                  {isDivider ? (
+                    <div style={{ textAlign: "center", opacity: 0.3 }}>
+                      {msg.text}
+                    </div>
+                  ) : (
+                    msg.text
+                  )}
                 </div>
               </div>
             );
@@ -403,15 +453,91 @@ export default function Chat({ mode, setMode }) {
       </div>
 
       {/* MEMORY PANEL */}
-      <div style={{ borderLeft: "1px solid rgba(0,245,255,0.2)", padding: "10px" }}>
-        <div style={{ fontSize: "10px", color: "#4a7a96" }}>// MEMORY</div>
+      <div style={{ 
+          borderLeft: "1px solid rgba(0,245,255,0.2)",
+          padding: "10px",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}>
+      <div style={{ fontSize: "10px", color: "#4a7a96", marginBottom: "6px" }}>
+      // RADAR
+        </div>
 
-        {(messages || []).slice(-6).map((m, i) => (
-          <div key={i} style={{ fontSize: "10px", marginTop: "6px" }}>
-            › {((m && m.text) ? m.text.slice(0, 30) : "")}
-          </div>
-        ))}
-      </div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
+          <svg width="120" height="120">
+            <circle cx="60" cy="60" r="55" fill="none" stroke="rgba(0,245,255,0.15)" />
+            <circle cx="60" cy="60" r="35" fill="none" stroke="rgba(0,245,255,0.1)" />
+            <circle cx="60" cy="60" r="15" fill="none" stroke="rgba(0,245,255,0.1)" />
+
+            {/* Crosshair */}
+            <line x1="60" y1="5" x2="60" y2="115" stroke="rgba(0,245,255,0.1)" />
+            <line x1="5" y1="60" x2="115" y2="60" stroke="rgba(0,245,255,0.1)" />
+
+            {/* Sweep */}
+            <g style={{ transformOrigin: "60px 60px", animation: "radarSpin 3s linear infinite" }}>
+              <path d="M60 60 L60 5 A55 55 0 0 1 110 80 Z" fill={`${accent}33`} />
+            </g>
+
+            {/* Blips */}
+            <circle cx="80" cy="40" r="2" fill={accent} />
+            <circle cx="40" cy="80" r="2" fill={accent} />
+          </svg>
+        </div>
+          {/* MEMORY PANEL */}
+          <div
+            style={{
+              borderLeft: "1px solid rgba(0,245,255,0.2)",
+              padding: "10px",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            {/* HEADER */}
+            <div
+              style={{
+                fontSize: "10px",
+                color: "#4a7a96",
+                marginBottom: "6px",
+                borderBottom: "1px solid rgba(0,245,255,0.15)",
+                paddingBottom: "4px",
+              }}
+            >
+              // MEMORY LOG
+            </div>
+
+              {/* LIST */}
+              <div style={{ overflowY: "auto", flex: 1 }}>
+                {(messages || [])
+                  .slice(-8)
+                  .reverse()
+                  .map((m, i) => {
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          fontSize: "9px",
+                          marginTop: "6px",
+                          opacity: 0.75,
+                          display: "flex",
+                          gap: "4px",
+                          borderBottom: "1px solid rgba(0,245,255,0.05)",
+                          paddingBottom: "4px",
+                        }}
+                      >
+                        <span style={{ color: accent }}>›</span>
+                        <span>
+                          {m?.type === "user"
+                            ? `Query: ${m.text.slice(0, 20)}`
+                            : `MIA: ${m.text.slice(0, 20)}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+        </div>
 
       {/* INPUT BAR */}
       <div
@@ -421,7 +547,10 @@ export default function Chat({ mode, setMode }) {
           alignItems: "center",
           gap: "10px",
           borderTop: `1px solid ${accent}`,
-          padding: "10px",
+          padding: "0 14px",
+          background: "rgba(2,12,20,0.9)",
+
+          boxShadow: `0 -2px 10px ${accent}11`,
         }}
       >
         <span style={{ color: accent, fontSize: "10px" }}>
@@ -438,6 +567,8 @@ export default function Chat({ mode, setMode }) {
             border: "none",
             outline: "none",
             color: "#cce8f4",
+            fontSize: "12px",
+            caretColor: accent,
           }}
         />
 
@@ -447,8 +578,10 @@ export default function Chat({ mode, setMode }) {
             border: `1px solid ${accent}`,
             background: "transparent",
             color: accent,
-            padding: "5px 12px",
+            padding: "6px 14px",
             cursor: "pointer",
+            fontSize: "10px",
+            letterSpacing: "0.1em",
           }}
         >
           TRANSMIT
@@ -473,6 +606,11 @@ export default function Chat({ mode, setMode }) {
             0%,100% { transform: translateY(0); opacity: 0.4; }
             50% { transform: translateY(-5px); opacity: 1; }
           }
+
+          @keyframes radarSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
         `}
       </style>
 
@@ -486,6 +624,7 @@ export default function Chat({ mode, setMode }) {
                 win={win}
                 accent={accent}
                 zIndex={activeWindow === win.id ? 10000 : 9000}
+                active={activeWindow === win.id}
                 onFocus={() => setActiveWindow(win.id)}
                 onClose={() =>
                 setWindows((prev) => prev.filter((w) => w.id !== win.id))
@@ -506,6 +645,7 @@ export default function Chat({ mode, setMode }) {
                 win={win}
                 accent={accent}
                 zIndex={activeWindow === win.id ? 10000 : 9000}
+                active={activeWindow === win.id}
                 onFocus={() => setActiveWindow(win.id)}
                 onClose={() =>
                 setWindows((prev) => prev.filter((w) => w.id !== win.id))

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function TerminalWindow({ win, onClose, accent, zIndex, onFocus, onUpdate }) {
+export default function TerminalWindow({ win, onClose, accent, zIndex, onFocus, onUpdate, active }) {
   const [position, setPosition] = useState(
   win.position || {
     x: 200,
@@ -32,6 +32,11 @@ export default function TerminalWindow({ win, onClose, accent, zIndex, onFocus, 
       x: e.clientX - position.x,
       y: e.clientY - position.y,
     });
+
+    setPosition((prev) => ({
+      x: prev.x + e.movementX,
+      y: prev.y + e.movementY,
+    }));
   };
 
   // 📐 RESIZE START
@@ -138,11 +143,22 @@ useEffect(() => {
         width: size.width,
         height: size.height,
         background: "#020c14",
-        border: `1px solid ${accent}`,
-        boxShadow: `0 0 20px ${accent}55`,
+        border: active
+          ? `1px solid ${accent}`
+          : "1px solid rgba(0,245,255,0.2)",
+
+        boxShadow: active
+          ? `0 0 20px ${accent}, 0 0 40px ${accent}55`
+          : "0 0 10px rgba(0,0,0,0.6)",
+
+        opacity: active ? 1 : 0.85,
+
         zIndex: zIndex || 9999,
         display: "flex",
         flexDirection: "column",
+
+        transition: "box-shadow 0.2s, opacity 0.2s", // 🔥 SMOOTH FEEL
+        userSelect: "none",
       }}
     >
       {/* HEADER */}
@@ -153,13 +169,17 @@ useEffect(() => {
         }}
         style={{
           cursor: "move",
-          padding: "6px",
+          padding: "6px 8px",
           borderBottom: `1px solid ${accent}`,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           color: accent,
           fontSize: "10px",
+
+          background: active
+            ? "rgba(0,245,255,0.08)"
+            : "rgba(0,0,0,0.3)",
         }}
       >
         <span>TERMINAL</span>
@@ -176,6 +196,7 @@ useEffect(() => {
               cursor: "pointer",
               padding: "2px 6px",
               fontSize: "10px",
+              transition: "all 0.2s ease",
             }}
           >
             {isMaximized ? "⧉" : "⬜"}
@@ -192,6 +213,7 @@ useEffect(() => {
               cursor: "pointer",
               padding: "2px 6px",
               fontSize: "10px",
+              transition: "all 0.2s ease",
             }}
           >
             ✕
@@ -219,10 +241,17 @@ useEffect(() => {
           onFocus();
           handleResizeStart(e);   // ✅ FIXED
         }}
+        onMouseEnter={(e) => {
+          e.target.style.background = accent;
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = active ? accent : `${accent}55`;
+        }}
         style={{
           width: "15px",
           height: "15px",
-          background: `${accent}88`,
+          background: active ? `${accent}` : `${accent}55`,
+          boxShadow: active ? `0 0 6px ${accent}` : "none",
           position: "absolute",
           right: 0,
           bottom: 0,
